@@ -1,16 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { EyeOff, ImageOff, SendHorizonal, Sparkles, Zap } from 'lucide-react'
+import { ImageOff, Maximize2, SendHorizonal, Sparkles, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { getCategory } from '@/lib/safespeak/categories'
 import { RESPONSE_TEMPLATES } from '@/lib/safespeak/mock-data'
 import type { Report } from '@/lib/safespeak/types'
-import { cn } from '@/lib/utils'
 import { useSafeSpeak } from '../safespeak-provider'
-import { CategoryIcon, FormattedTime, MessageThread, UrgencyBadge } from '../shared'
+import { AssignedBadge, CategoryIcon, FormattedTime, MessageThread, UrgencyBadge } from '../shared'
 import { StatusSelect } from './status-select'
 
 export function ReportDetailSheet({ report, onClose }: { report: Report | null; onClose: () => void }) {
@@ -27,13 +26,13 @@ export function ReportDetailSheet({ report, onClose }: { report: Report | null; 
 }
 
 function ReportDetail({ report }: { report: Report }) {
-  const { updateStatus, sendMessage } = useSafeSpeak()
+  const { updateStatus, sendMessage, staffName } = useSafeSpeak()
   const [reply, setReply] = useState('')
 
   function send(text: string) {
     const trimmed = text.trim()
     if (!trimmed) return
-    sendMessage(report.id, 'counselor', trimmed)
+    sendMessage(report.id, 'counselor', staffName ? `${staffName}: ${trimmed}` : trimmed)
     setReply('')
   }
 
@@ -56,6 +55,7 @@ function ReportDetail({ report }: { report: Report }) {
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <UrgencyBadge urgency={report.urgency} />
+          <AssignedBadge teacher={report.assigned_teacher} isMine={report.assigned_teacher === staffName} />
           <StatusSelect
             value={report.status}
             onChange={(s) => updateStatus(report.id, s)}
@@ -85,9 +85,9 @@ function ReportDetail({ report }: { report: Report }) {
 
         <section aria-labelledby="screenshot-heading" className="flex flex-col gap-2">
           <h3 id="screenshot-heading" className="text-sm font-semibold text-muted-foreground">
-            Redacted screenshot
+            Screenshot
           </h3>
-          <RedactedScreenshot report={report} />
+          <AttachedScreenshot report={report} />
         </section>
 
         <section aria-labelledby="thread-heading" className="flex flex-col gap-3">
@@ -106,6 +106,9 @@ function ReportDetail({ report }: { report: Report }) {
         <section aria-labelledby="reply-heading" className="flex flex-col gap-3 border-t pt-5">
           <h3 id="reply-heading" className="text-sm font-semibold">
             Reply to <span className="font-mono">{report.code}</span>
+            {staffName && (
+              <span className="ml-1 font-normal text-muted-foreground">{`· signed as ${staffName}`}</span>
+            )}
           </h3>
           <div className="flex flex-wrap gap-2">
             {RESPONSE_TEMPLATES.map((t) => (
@@ -151,7 +154,7 @@ function ReportDetail({ report }: { report: Report }) {
   )
 }
 
-function RedactedScreenshot({ report }: { report: Report }) {
+function AttachedScreenshot({ report }: { report: Report }) {
   const shot = report.screenshot
   if (!shot) {
     return (
@@ -162,22 +165,24 @@ function RedactedScreenshot({ report }: { report: Report }) {
     )
   }
   return (
-    <div className="relative flex justify-center overflow-hidden rounded-2xl border bg-muted/50 p-3">
-      {/* eslint-disable-next-line @next/next/no-img-element -- may be a local blob URL */}
-      <img
-        src={shot.url}
-        alt={shot.blurred ? 'Attached screenshot with faces and handles redacted' : 'Attached screenshot'}
-        className={cn('max-h-80 w-auto rounded-xl object-contain', shot.blurred && 'blur-md')}
-      />
-      <span
-        className={cn(
-          'absolute top-5 left-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm',
-          shot.blurred ? 'bg-foreground text-background' : 'bg-amber-100 text-amber-900',
-        )}
+    <div className="flex flex-col gap-2 rounded-2xl border bg-muted/50 p-3">
+      <a href={shot.url} target="_blank" rel="noopener noreferrer" className="flex justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- may be a local blob URL */}
+        <img
+          src={shot.url}
+          alt={`Screenshot attached to report ${report.id}`}
+          className="max-h-[28rem] w-auto rounded-xl object-contain"
+        />
+      </a>
+      <a
+        href={shot.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 self-end text-xs font-semibold text-primary underline-offset-4 hover:underline"
       >
-        <EyeOff className="size-3.5" aria-hidden />
-        {shot.blurred ? 'Privacy Shield: faces & handles redacted' : 'Privacy Shield off'}
-      </span>
+        <Maximize2 className="size-3.5" aria-hidden />
+        Open full size
+      </a>
     </div>
   )
 }

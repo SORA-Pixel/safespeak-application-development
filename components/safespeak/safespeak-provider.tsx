@@ -5,12 +5,11 @@ import { INITIAL_REPORTS } from '@/lib/safespeak/mock-data'
 import { generateSecretCode, simulateGeminiTriage } from '@/lib/safespeak/triage'
 import type { Message, NewReportInput, Report, Status } from '@/lib/safespeak/types'
 
-export const STAFF_PASSCODE = 'admin123'
-
 interface SafeSpeakContextValue {
   reports: Report[]
   isStaff: boolean
-  login: (passcode: string) => boolean
+  staffName: string | null
+  login: (staffName: string) => void
   logout: () => void
   submitReport: (input: NewReportInput) => Report
   updateStatus: (id: string, status: Status) => void
@@ -25,15 +24,12 @@ const uid = () => Math.random().toString(36).slice(2, 10)
 
 export function SafeSpeakProvider({ children }: { children: React.ReactNode }) {
   const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS)
-  const [isStaff, setIsStaff] = useState(false)
+  const [staffName, setStaffName] = useState<string | null>(null)
+  const isStaff = staffName !== null
 
-  const login = useCallback((passcode: string) => {
-    const ok = passcode === STAFF_PASSCODE
-    if (ok) setIsStaff(true)
-    return ok
-  }, [])
+  const login = useCallback((name: string) => setStaffName(name), [])
 
-  const logout = useCallback(() => setIsStaff(false), [])
+  const logout = useCallback(() => setStaffName(null), [])
 
   const submitReport = useCallback(
     (input: NewReportInput) => {
@@ -51,6 +47,7 @@ export function SafeSpeakProvider({ children }: { children: React.ReactNode }) {
         status: 'Pending',
         isNew: true,
         screenshot: input.screenshot,
+        assigned_teacher: input.assigned_teacher,
         messages: [],
       }
       setReports((prev) => [report, ...prev])
@@ -89,6 +86,7 @@ export function SafeSpeakProvider({ children }: { children: React.ReactNode }) {
     () => ({
       reports,
       isStaff,
+      staffName,
       login,
       logout,
       submitReport,
@@ -97,7 +95,7 @@ export function SafeSpeakProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       findByCode,
     }),
-    [reports, isStaff, login, logout, submitReport, updateStatus, markSeen, sendMessage, findByCode],
+    [reports, isStaff, staffName, login, logout, submitReport, updateStatus, markSeen, sendMessage, findByCode],
   )
 
   return <SafeSpeakContext.Provider value={value}>{children}</SafeSpeakContext.Provider>

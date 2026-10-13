@@ -10,6 +10,7 @@ import { CategoryPicker } from './category-picker'
 import { ScreenshotUpload } from './screenshot-upload'
 import { StepCard } from './step-card'
 import { SuccessDialog } from './success-dialog'
+import { TeacherPicker } from './teacher-picker'
 
 const MIN_DETAILS = 10
 
@@ -18,7 +19,7 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
   const [category, setCategory] = useState<CategoryId | null>(null)
   const [details, setDetails] = useState('')
   const [file, setFile] = useState<{ url: string; name: string } | null>(null)
-  const [privacyShield, setPrivacyShield] = useState(true)
+  const [teacher, setTeacher] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showErrors, setShowErrors] = useState(false)
   const [submitted, setSubmitted] = useState<Report | null>(null)
@@ -33,17 +34,22 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
       return
     }
     setSubmitting(true)
-    const screenshot: Screenshot | null = file ? { ...file, blurred: privacyShield } : null
+    const screenshot: Screenshot | null = file
     // Short pause so the simulated AI triage feels like a real round-trip.
     window.setTimeout(() => {
-      const report = submitReport({ category, details: details.trim(), screenshot })
+      const report = submitReport({
+        category,
+        details: details.trim(),
+        screenshot,
+        assigned_teacher: teacher || null,
+      })
       setSubmitted(report)
       setSubmitting(false)
       setShowErrors(false)
       setCategory(null)
       setDetails('')
       setFile(null)
-      setPrivacyShield(true)
+      setTeacher('')
     }, 1100)
   }
 
@@ -82,15 +88,18 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
         </StepCard>
 
         <StepCard step={3} title="Got a screenshot?" hint="Totally optional — it can help us understand.">
-          <ScreenshotUpload
-            file={file}
-            onFileChange={setFile}
-            privacyShield={privacyShield}
-            onPrivacyShieldChange={setPrivacyShield}
-          />
+          <ScreenshotUpload file={file} onFileChange={setFile} />
         </StepCard>
 
-        <StepCard step={4} title="Ready when you are" hint="Nobody will know it was you.">
+        <StepCard
+          step={4}
+          title="Who would you like to speak with? (Optional)"
+          hint="Your report stays anonymous either way."
+        >
+          <TeacherPicker value={teacher} onChange={setTeacher} />
+        </StepCard>
+
+        <StepCard step={5} title="Ready when you are" hint="Nobody will know it was you.">
           <Button
             type="submit"
             disabled={submitting}

@@ -8,7 +8,7 @@ import { useSafeSpeak } from './safespeak-provider'
 import { StaffLoginDialog } from './staff-login-dialog'
 
 export function AppHeader() {
-  const { isStaff, logout } = useSafeSpeak()
+  const { isStaff, staffName, logout } = useSafeSpeak()
   const [loginOpen, setLoginOpen] = useState(false)
 
   return (
@@ -28,9 +28,9 @@ export function AppHeader() {
 
         {isStaff ? (
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-secondary-foreground sm:inline-flex">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-secondary-foreground">
               <ShieldCheck className="size-4" aria-hidden />
-              Logged in as Staff
+              <span className="hidden sm:inline">Logged in as</span> {staffName}
             </span>
             <Button variant="outline" onClick={logout}>
               <LogOut aria-hidden />

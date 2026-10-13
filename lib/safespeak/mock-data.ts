@@ -17,7 +17,8 @@ export const INITIAL_REPORTS: Report[] = [
     createdAt: t('2026-10-13T08:42:00'),
     status: 'Pending',
     isNew: true,
-    screenshot: { url: '/mock-screenshot.png', name: 'group-chat.png', blurred: true },
+    screenshot: { url: '/mock-screenshot.png', name: 'group-chat.png' },
+    assigned_teacher: 'Mr. Alexis',
     messages: [],
   },
   {
@@ -32,12 +33,13 @@ export const INITIAL_REPORTS: Report[] = [
     createdAt: t('2026-10-12T15:10:00'),
     status: 'In Progress',
     isNew: false,
-    screenshot: { url: '/mock-screenshot.png', name: 'comments.png', blurred: true },
+    screenshot: { url: '/mock-screenshot.png', name: 'comments.png' },
+    assigned_teacher: null,
     messages: [
       {
         id: 'm1',
         from: 'counselor',
-        text: 'Thank you for telling us. We are looking into this, you are safe. Is this still happening today?',
+        text: 'Mr. Botto: Thank you for telling us. We are looking into this, you are safe. Is this still happening today?',
         sentAt: t('2026-10-12T16:02:00'),
       },
       {
@@ -61,6 +63,7 @@ export const INITIAL_REPORTS: Report[] = [
     status: 'Pending',
     isNew: true,
     screenshot: null,
+    assigned_teacher: 'Mr. Botto',
     messages: [],
   },
   {
@@ -75,11 +78,12 @@ export const INITIAL_REPORTS: Report[] = [
     status: 'Resolved',
     isNew: false,
     screenshot: null,
+    assigned_teacher: null,
     messages: [
       {
         id: 'm3',
         from: 'counselor',
-        text: "Thanks for letting us know! We've reported that site to IT so it gets blocked on school devices.",
+        text: "Mr. Alexis: Thanks for letting us know! We've reported that site to IT so it gets blocked on school devices.",
         sentAt: t('2026-10-09T13:40:00'),
       },
     ],

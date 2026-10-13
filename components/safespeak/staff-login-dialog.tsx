@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { KeyRound } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { KeyRound, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,7 +12,10 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { STAFF_PASSCODE, useSafeSpeak } from './safespeak-provider'
+import { verifyStaffLogin } from '@/app/actions/staff-auth'
+import { ChangePasswordForm } from './change-password-form'
+import { useSafeSpeak } from './safespeak-provider'
+import { StaffAccountPicker } from './staff-account-picker'
 
 interface StaffLoginDialogProps {
   open: boolean
@@ -21,12 +24,16 @@ interface StaffLoginDialogProps {
 
 export function StaffLoginDialog({ open, onOpenChange }: StaffLoginDialogProps) {
   const { login } = useSafeSpeak()
-  const [passcode, setPasscode] = useState('')
+  const [mode, setMode] = useState<'login' | 'change'>('login')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [pending, startTransition] = useTransition()
 
   function handleOpenChange(next: boolean) {
     if (!next) {
-      setPasscode('')
+      setMode('login')
+      setPassword('')
       setError('')
     }
     onOpenChange(next)
@@ -34,11 +41,16 @@ export function StaffLoginDialog({ open, onOpenChange }: StaffLoginDialogProps) 
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (login(passcode)) {
-      handleOpenChange(false)
-    } else {
-      setError("That passcode didn't work. Please try again.")
-    }
+    if (!username) return setError('Please choose your staff account.')
+    startTransition(async () => {
+      const result = await verifyStaffLogin(username, password)
+      if (result.ok) {
+        login(username)
+        handleOpenChange(false)
+      } else {
+        setError(result.error)
+      }
+    })
   }
 
   return (
@@ -48,37 +60,61 @@ export function StaffLoginDialog({ open, onOpenChange }: StaffLoginDialogProps) 
           <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
             <KeyRound className="size-5" aria-hidden />
           </div>
-          <DialogTitle className="font-display text-xl">Staff Login</DialogTitle>
-          <DialogDescription>Counselors and staff only. Enter your passcode to open the dashboard.</DialogDescription>
+          <DialogTitle className="font-display text-xl">
+            {mode === 'login' ? 'Staff Login' : 'Reset / Change Password'}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === 'login'
+              ? 'Counselors and staff only. Choose your account and enter your password.'
+              : 'Enter your Staff ID Code to set a new password.'}
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="staff-passcode">Passcode</Label>
-            <Input
-              id="staff-passcode"
-              type="password"
-              autoComplete="current-password"
-              autoFocus
-              value={passcode}
-              onChange={(e) => {
-                setPasscode(e.target.value)
+
+        {mode === 'login' ? (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <StaffAccountPicker
+              name="login-user"
+              value={username}
+              onChange={(v) => {
+                setUsername(v)
                 setError('')
               }}
-              aria-invalid={!!error}
-              aria-describedby="passcode-hint passcode-error"
-              className="h-10"
             />
-            <p id="passcode-error" role="alert" className="min-h-4 text-xs font-medium text-destructive">
-              {error}
-            </p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="staff-password">Password</Label>
+              <Input
+                id="staff-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setError('')
+                }}
+                aria-invalid={!!error}
+                aria-describedby="password-error"
+                className="h-10"
+              />
+              <p id="password-error" role="alert" className="min-h-4 text-xs font-medium text-destructive">
+                {error}
+              </p>
+            </div>
+            <Button type="submit" size="lg" className="h-10" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" aria-hidden />}
+              Unlock Dashboard
+            </Button>
+            <Button type="button" variant="link" size="sm" onClick={() => setMode('change')}>
+              Reset / Change Password
+            </Button>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <ChangePasswordForm defaultUsername={username} onDone={() => setMode('login')} />
+            <Button type="button" variant="link" size="sm" onClick={() => setMode('login')}>
+              Back to login
+            </Button>
           </div>
-          <Button type="submit" size="lg" className="h-10">
-            Unlock Dashboard
-          </Button>
-          <p id="passcode-hint" className="text-center text-xs text-muted-foreground">
-            Default Passcode: <span className="font-mono font-semibold">{STAFF_PASSCODE}</span>
-          </p>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   )

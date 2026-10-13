@@ -22,7 +22,6 @@ export interface Message {
 export interface Screenshot {
   url: string
   name: string
-  blurred: boolean
 }
 
 export interface Report {
@@ -36,6 +35,7 @@ export interface Report {
   status: Status
   isNew: boolean
   screenshot: Screenshot | null
+  assigned_teacher: string | null
   messages: Message[]
 }
 
@@ -43,4 +43,5 @@ export interface NewReportInput {
   category: CategoryId
   details: string
   screenshot: Screenshot | null
+  assigned_teacher: string | null
 }
