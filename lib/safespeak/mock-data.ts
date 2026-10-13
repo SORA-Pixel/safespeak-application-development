@@ -7,6 +7,7 @@ export const DEMO_CODE = 'SAFE-PANDA-42'
 export const INITIAL_REPORTS: Report[] = [
   {
     id: 'R-1004',
+    assignedTo: 'alexis',
     code: 'SAFE-COMET-17',
     category: 'fake-ai',
     details:
@@ -22,6 +23,7 @@ export const INITIAL_REPORTS: Report[] = [
   },
   {
     id: 'R-1003',
+    assignedTo: 'any',
     code: DEMO_CODE,
     category: 'cyberbullying',
     details:
@@ -50,6 +52,7 @@ export const INITIAL_REPORTS: Report[] = [
   },
   {
     id: 'R-1002',
+    assignedTo: 'botto',
     code: 'SAFE-OTTER-63',
     category: 'worried-friend',
     details:
@@ -65,6 +68,7 @@ export const INITIAL_REPORTS: Report[] = [
   },
   {
     id: 'R-1001',
+    assignedTo: 'any',
     code: 'SAFE-MAPLE-28',
     category: 'harmful-content',
     details: 'I saw a video on a gaming site with a lot of gross stuff and it kept auto-playing.',

@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import type { Status, Urgency } from '@/lib/safespeak/types'
-import { useSafeSpeak } from '../safespeak-provider'
+import { canStaffAccessReport, useSafeSpeak } from '../safespeak-provider'
 import { MetricCards } from './metric-cards'
 import { ReportDetailSheet } from './report-detail-sheet'
 import { ReportFilters } from './report-filters'
 import { ReportsTable } from './reports-table'
 
 export function CounselorDashboard() {
-  const { reports, markSeen } = useSafeSpeak()
+  const { reports, markSeen, currentStaff } = useSafeSpeak()
   const [query, setQuery] = useState('')
   const [urgency, setUrgency] = useState<Urgency | 'all'>('all')
   const [status, setStatus] = useState<Status | 'all'>('all')
@@ -19,6 +19,7 @@ export function CounselorDashboard() {
     const q = query.trim().toLowerCase()
     return [...reports]
       .sort((a, b) => b.createdAt - a.createdAt)
+      .filter((r) => canStaffAccessReport(currentStaff, r.assignedTo))
       .filter((r) => urgency === 'all' || r.urgency === urgency)
       .filter((r) => status === 'all' || r.status === status)
       .filter(
@@ -30,7 +31,7 @@ export function CounselorDashboard() {
       )
   }, [reports, query, urgency, status])
 
-  const selected = reports.find((r) => r.id === selectedId) ?? null
+  const selected = reports.find((r) => r.id === selectedId && canStaffAccessReport(currentStaff, r.assignedTo)) ?? null
 
   function openReport(id: string) {
     setSelectedId(id)

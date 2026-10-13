@@ -60,6 +60,11 @@ export function CategoryIcon({
   )
 }
 
+export function AssignedBadge({ assignedTo, className }: { assignedTo: 'any' | 'alexis' | 'botto'; className?: string }) {
+  const label = assignedTo === 'any' ? 'Any Counselor' : `Private: ${assignedTo === 'alexis' ? 'Mr. Alexis' : 'Mr. Botto'}`
+  return <span className={cn('inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground', className)}>{label}</span>
+}
+
 export function MessageThread({
   messages,
   viewer,
