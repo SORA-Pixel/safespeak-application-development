@@ -36,7 +36,7 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
     const screenshot: Screenshot | null = file ? { ...file, blurred: privacyShield } : null
     // Short pause so the simulated AI triage feels like a real round-trip.
     window.setTimeout(() => {
-      const report = submitReport({ category, details: details.trim(), screenshot })
+      const report = submitReport({ category, details: details.trim(), screenshot, assignedTo: 'any' })
       setSubmitted(report)
       setSubmitting(false)
       setShowErrors(false)

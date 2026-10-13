@@ -3,14 +3,21 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { INITIAL_REPORTS } from '@/lib/safespeak/mock-data'
 import { generateSecretCode, simulateGeminiTriage } from '@/lib/safespeak/triage'
-import type { Message, NewReportInput, Report, Status } from '@/lib/safespeak/types'
+import { TEACHERS } from '@/lib/safespeak/types'
+import type { Message, NewReportInput, Report, Status, TeacherId } from '@/lib/safespeak/types'
 
-export const STAFF_PASSCODE = 'admin123'
+export type StaffMember = 'alexis' | 'botto'
+export const STAFF_ACCOUNTS: Record<StaffMember, { username: string; password: string; staffId: string }> = {
+  alexis: { username: 'Mr. Alexis', password: 'staff_124', staffId: TEACHERS.alexis.staffId },
+  botto: { username: 'Mr. Botto', password: 'staff_123', staffId: TEACHERS.botto.staffId },
+}
 
 interface SafeSpeakContextValue {
   reports: Report[]
   isStaff: boolean
-  login: (passcode: string) => boolean
+  currentStaff: StaffMember | null
+  login: (username: string, password: string) => boolean
+  resetPassword: (staffId: string, nextPassword: string) => boolean
   logout: () => void
   submitReport: (input: NewReportInput) => Report
   updateStatus: (id: string, status: Status) => void
@@ -20,86 +27,42 @@ interface SafeSpeakContextValue {
 }
 
 const SafeSpeakContext = createContext<SafeSpeakContextValue | null>(null)
-
 const uid = () => Math.random().toString(36).slice(2, 10)
 
 export function SafeSpeakProvider({ children }: { children: React.ReactNode }) {
   const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS)
-  const [isStaff, setIsStaff] = useState(false)
+  const [passwords, setPasswords] = useState(() => ({ alexis: STAFF_ACCOUNTS.alexis.password, botto: STAFF_ACCOUNTS.botto.password }))
+  const [currentStaff, setCurrentStaff] = useState<StaffMember | null>(null)
 
-  const login = useCallback((passcode: string) => {
-    const ok = passcode === STAFF_PASSCODE
-    if (ok) setIsStaff(true)
-    return ok
+  const login = useCallback((username: string, password: string) => {
+    const member = (Object.keys(STAFF_ACCOUNTS) as StaffMember[]).find((key) => STAFF_ACCOUNTS[key].username.toLowerCase() === username.trim().toLowerCase() && passwords[key] === password)
+    if (!member) return false
+    setCurrentStaff(member)
+    return true
+  }, [passwords])
+
+  const resetPassword = useCallback((staffId: string, nextPassword: string) => {
+    const member = (Object.keys(STAFF_ACCOUNTS) as StaffMember[]).find((key) => STAFF_ACCOUNTS[key].staffId === staffId.trim().toUpperCase())
+    if (!member || nextPassword.trim().length < 6) return false
+    setPasswords((prev) => ({ ...prev, [member]: nextPassword.trim() }))
+    return true
   }, [])
 
-  const logout = useCallback(() => setIsStaff(false), [])
-
-  const submitReport = useCallback(
-    (input: NewReportInput) => {
-      const code = generateSecretCode(new Set(reports.map((r) => r.code)))
-      const nextNumber = Math.max(1000, ...reports.map((r) => Number(r.id.slice(2)))) + 1
-      const triage = simulateGeminiTriage(input.category, input.details)
-      const report: Report = {
-        id: `R-${nextNumber}`,
-        code,
-        category: input.category,
-        details: input.details,
-        urgency: triage.urgency,
-        summary: triage.summary,
-        createdAt: Date.now(),
-        status: 'Pending',
-        isNew: true,
-        screenshot: input.screenshot,
-        messages: [],
-      }
-      setReports((prev) => [report, ...prev])
-      return report
-    },
-    [reports],
-  )
-
-  const patch = useCallback((id: string, fn: (r: Report) => Report) => {
-    setReports((prev) => prev.map((r) => (r.id === id ? fn(r) : r)))
-  }, [])
-
-  const updateStatus = useCallback(
-    (id: string, status: Status) => patch(id, (r) => ({ ...r, status })),
-    [patch],
-  )
-
+  const logout = useCallback(() => setCurrentStaff(null), [])
+  const patch = useCallback((id: string, fn: (r: Report) => Report) => setReports((prev) => prev.map((r) => (r.id === id ? fn(r) : r))), [])
+  const submitReport = useCallback((input: NewReportInput) => {
+    const code = generateSecretCode(new Set(reports.map((r) => r.code)))
+    const nextNumber = Math.max(1000, ...reports.map((r) => Number(r.id.slice(2)))) + 1
+    const triage = simulateGeminiTriage(input.category, input.details)
+    const report: Report = { id: `R-${nextNumber}`, assignedTo: input.assignedTo, code, category: input.category, details: input.details, urgency: triage.urgency, summary: triage.summary, createdAt: Date.now(), status: 'Pending', isNew: true, screenshot: input.screenshot, messages: [] }
+    setReports((prev) => [report, ...prev])
+    return report
+  }, [reports])
+  const updateStatus = useCallback((id: string, status: Status) => patch(id, (r) => ({ ...r, status })), [patch])
   const markSeen = useCallback((id: string) => patch(id, (r) => ({ ...r, isNew: false })), [patch])
-
-  const sendMessage = useCallback(
-    (id: string, from: Message['from'], text: string) =>
-      patch(id, (r) => ({
-        ...r,
-        status: from === 'counselor' && r.status === 'Pending' ? 'In Progress' : r.status,
-        messages: [...r.messages, { id: uid(), from, text, sentAt: Date.now() }],
-      })),
-    [patch],
-  )
-
-  const findByCode = useCallback(
-    (code: string) => reports.find((r) => r.code === code.trim().toUpperCase()),
-    [reports],
-  )
-
-  const value = useMemo(
-    () => ({
-      reports,
-      isStaff,
-      login,
-      logout,
-      submitReport,
-      updateStatus,
-      markSeen,
-      sendMessage,
-      findByCode,
-    }),
-    [reports, isStaff, login, logout, submitReport, updateStatus, markSeen, sendMessage, findByCode],
-  )
-
+  const sendMessage = useCallback((id: string, from: Message['from'], text: string) => patch(id, (r) => ({ ...r, status: from === 'counselor' && r.status === 'Pending' ? 'In Progress' : r.status, messages: [...r.messages, { id: uid(), from, text, sentAt: Date.now() }] })), [patch])
+  const findByCode = useCallback((code: string) => reports.find((r) => r.code === code.trim().toUpperCase()), [reports])
+  const value = useMemo(() => ({ reports, isStaff: !!currentStaff, currentStaff, login, resetPassword, logout, submitReport, updateStatus, markSeen, sendMessage, findByCode }), [reports, currentStaff, login, resetPassword, logout, submitReport, updateStatus, markSeen, sendMessage, findByCode])
   return <SafeSpeakContext.Provider value={value}>{children}</SafeSpeakContext.Provider>
 }
 
@@ -107,4 +70,8 @@ export function useSafeSpeak() {
   const ctx = useContext(SafeSpeakContext)
   if (!ctx) throw new Error('useSafeSpeak must be used inside SafeSpeakProvider')
   return ctx
+}
+
+export function canStaffAccessReport(staff: StaffMember | null, assignedTo: TeacherId) {
+  return assignedTo === 'any' || assignedTo === staff
 }

@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getCategory } from '@/lib/safespeak/categories'
 import type { Report } from '@/lib/safespeak/types'
 import { useSafeSpeak } from '../safespeak-provider'
-import { CategoryIcon, FormattedTime, UrgencyBadge } from '../shared'
+import { AssignedBadge, CategoryIcon, FormattedTime, UrgencyBadge } from '../shared'
 import { StatusSelect } from './status-select'
 
 export function ReportsTable({ reports, onOpen }: { reports: Report[]; onOpen: (id: string) => void }) {
@@ -54,7 +54,7 @@ export function ReportsTable({ reports, onOpen }: { reports: Report[]; onOpen: (
               <TableCell>
                 <span className="flex items-center gap-2.5">
                   <CategoryIcon category={r.category} />
-                  <span className="max-w-48 truncate text-sm font-medium">{getCategory(r.category).label}</span>
+                  <span className="flex min-w-0 flex-col gap-1"><span className="max-w-48 truncate text-sm font-medium">{getCategory(r.category).label}</span><AssignedBadge assignedTo={r.assignedTo} /></span>
                 </span>
               </TableCell>
               <TableCell>

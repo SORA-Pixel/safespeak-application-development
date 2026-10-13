@@ -10,7 +10,7 @@ import { RESPONSE_TEMPLATES } from '@/lib/safespeak/mock-data'
 import type { Report } from '@/lib/safespeak/types'
 import { cn } from '@/lib/utils'
 import { useSafeSpeak } from '../safespeak-provider'
-import { CategoryIcon, FormattedTime, MessageThread, UrgencyBadge } from '../shared'
+import { AssignedBadge, CategoryIcon, FormattedTime, MessageThread, UrgencyBadge } from '../shared'
 import { StatusSelect } from './status-select'
 
 export function ReportDetailSheet({ report, onClose }: { report: Report | null; onClose: () => void }) {
@@ -56,6 +56,7 @@ function ReportDetail({ report }: { report: Report }) {
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <UrgencyBadge urgency={report.urgency} />
+          <AssignedBadge assignedTo={report.assignedTo} />
           <StatusSelect
             value={report.status}
             onChange={(s) => updateStatus(report.id, s)}

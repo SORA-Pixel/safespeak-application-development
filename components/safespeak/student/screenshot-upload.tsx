@@ -4,7 +4,6 @@ import { useId } from 'react'
 import { ImageUp, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
 
 interface ScreenshotUploadProps {
   file: { url: string; name: string } | null
@@ -37,7 +36,7 @@ export function ScreenshotUpload({
             <img
               src={file.url}
               alt={`Preview of ${file.name}${privacyShield ? ' with privacy blur applied' : ''}`}
-              className={cn('max-h-72 w-auto object-contain transition-[filter] duration-300', privacyShield && 'blur-md')}
+              className="max-h-72 w-auto object-contain"
             />
             {privacyShield && (
               <span className="absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-violet-800 shadow-sm">
