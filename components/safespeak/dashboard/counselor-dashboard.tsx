@@ -31,7 +31,7 @@ export function CounselorDashboard() {
       )
   }, [reports, query, urgency, status])
 
-  const selected = reports.find((r) => r.id === selectedId) ?? null
+  const selected = reports.find((r) => r.id === selectedId && canStaffAccessReport(currentStaff, r.assignedTo)) ?? null
 
   function openReport(id: string) {
     setSelectedId(id)

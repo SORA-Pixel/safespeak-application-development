@@ -10,6 +10,12 @@ export type Urgency = 'High' | 'Medium' | 'Low'
 export type Status = 'Pending' | 'In Progress' | 'Resolved'
 export type TeacherId = 'any' | 'alexis' | 'botto'
 
+export const COUNSELOR_OPTIONS = [
+  { id: 'any', label: 'Fastest counselor', description: 'Recommended — sends your report to the first available counselor.' },
+  { id: 'alexis', label: 'Mr. Alexis', description: 'Only Mr. Alexis can view and reply to this report.' },
+  { id: 'botto', label: 'Mr. Botto', description: 'Only Mr. Botto can view and reply to this report.' },
+] as const
+
 export const TEACHERS = {
   alexis: { id: 'alexis', name: 'Mr. Alexis', staffId: 'STAFF-9901' },
   botto: { id: 'botto', name: 'Mr. Botto', staffId: 'STAFF-9902' },
@@ -28,7 +34,6 @@ export interface Message {
 export interface Screenshot {
   url: string
   name: string
-  blurred: boolean
 }
 
 export interface Report {

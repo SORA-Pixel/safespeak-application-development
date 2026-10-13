@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type { CategoryId, Report, Screenshot } from '@/lib/safespeak/types'
+import { COUNSELOR_OPTIONS } from '@/lib/safespeak/types'
+import type { CategoryId, Report, Screenshot, TeacherId } from '@/lib/safespeak/types'
 import { useSafeSpeak } from '../safespeak-provider'
 import { CategoryPicker } from './category-picker'
 import { ScreenshotUpload } from './screenshot-upload'
@@ -16,9 +18,9 @@ const MIN_DETAILS = 10
 export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) => void }) {
   const { submitReport } = useSafeSpeak()
   const [category, setCategory] = useState<CategoryId | null>(null)
+  const [assignedTo, setAssignedTo] = useState<TeacherId>('any')
   const [details, setDetails] = useState('')
   const [file, setFile] = useState<{ url: string; name: string } | null>(null)
-  const [privacyShield, setPrivacyShield] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showErrors, setShowErrors] = useState(false)
   const [submitted, setSubmitted] = useState<Report | null>(null)
@@ -33,17 +35,17 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
       return
     }
     setSubmitting(true)
-    const screenshot: Screenshot | null = file ? { ...file, blurred: privacyShield } : null
+    const screenshot: Screenshot | null = file ? { ...file } : null
     // Short pause so the simulated AI triage feels like a real round-trip.
     window.setTimeout(() => {
-      const report = submitReport({ category, details: details.trim(), screenshot, assignedTo: 'any' })
+      const report = submitReport({ category, details: details.trim(), screenshot, assignedTo })
       setSubmitted(report)
       setSubmitting(false)
       setShowErrors(false)
       setCategory(null)
+      setAssignedTo('any')
       setDetails('')
       setFile(null)
-      setPrivacyShield(true)
     }, 1100)
   }
 
@@ -59,7 +61,25 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
           )}
         </StepCard>
 
-        <StepCard step={2} title="Tell us what happened..." hint="Share as much or as little as you want. Don't include your name.">
+        <StepCard step={2} title="Who should receive this?" hint="Choose the fastest available counselor or send it privately to one counselor.">
+          <Select value={assignedTo} onValueChange={(value) => setAssignedTo(value as TeacherId)}>
+            <SelectTrigger aria-label="Choose a counselor" className="h-auto min-h-14 rounded-2xl border-2 border-sky-200 bg-sky-50 px-4 py-3 text-left">
+              <SelectValue placeholder="Choose a counselor" />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNSELOR_OPTIONS.map((option) => (
+                <SelectItem key={option.id} value={option.id} className="py-3">
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-semibold">{option.label}</span>
+                    <span className="text-xs text-muted-foreground">{option.description}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </StepCard>
+
+        <StepCard step={3} title="Tell us what happened..." hint="Share as much or as little as you want. Don't include your name.">
           <label htmlFor="details" className="sr-only">
             Incident details
           </label>
@@ -81,16 +101,14 @@ export function ReportForm({ onCheckReplies }: { onCheckReplies: (code: string) 
           </div>
         </StepCard>
 
-        <StepCard step={3} title="Got a screenshot?" hint="Totally optional — it can help us understand.">
+        <StepCard step={4} title="Got a screenshot?" hint="Totally optional — it can help us understand.">
           <ScreenshotUpload
             file={file}
             onFileChange={setFile}
-            privacyShield={privacyShield}
-            onPrivacyShieldChange={setPrivacyShield}
           />
         </StepCard>
 
-        <StepCard step={4} title="Ready when you are" hint="Nobody will know it was you.">
+        <StepCard step={5} title="Ready when you are" hint="Nobody will know it was you.">
           <Button
             type="submit"
             disabled={submitting}

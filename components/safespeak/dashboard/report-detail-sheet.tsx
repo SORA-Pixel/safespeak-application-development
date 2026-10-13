@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { EyeOff, ImageOff, SendHorizonal, Sparkles, Zap } from 'lucide-react'
+import { ImageOff, SendHorizonal, Sparkles, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { getCategory } from '@/lib/safespeak/categories'
 import { RESPONSE_TEMPLATES } from '@/lib/safespeak/mock-data'
 import type { Report } from '@/lib/safespeak/types'
-import { cn } from '@/lib/utils'
 import { useSafeSpeak } from '../safespeak-provider'
 import { AssignedBadge, CategoryIcon, FormattedTime, MessageThread, UrgencyBadge } from '../shared'
 import { StatusSelect } from './status-select'
@@ -86,9 +85,9 @@ function ReportDetail({ report }: { report: Report }) {
 
         <section aria-labelledby="screenshot-heading" className="flex flex-col gap-2">
           <h3 id="screenshot-heading" className="text-sm font-semibold text-muted-foreground">
-            Redacted screenshot
+            Attached screenshot
           </h3>
-          <RedactedScreenshot report={report} />
+          <AttachedScreenshot report={report} />
         </section>
 
         <section aria-labelledby="thread-heading" className="flex flex-col gap-3">
@@ -152,7 +151,7 @@ function ReportDetail({ report }: { report: Report }) {
   )
 }
 
-function RedactedScreenshot({ report }: { report: Report }) {
+function AttachedScreenshot({ report }: { report: Report }) {
   const shot = report.screenshot
   if (!shot) {
     return (
@@ -165,20 +164,7 @@ function RedactedScreenshot({ report }: { report: Report }) {
   return (
     <div className="relative flex justify-center overflow-hidden rounded-2xl border bg-muted/50 p-3">
       {/* eslint-disable-next-line @next/next/no-img-element -- may be a local blob URL */}
-      <img
-        src={shot.url}
-        alt={shot.blurred ? 'Attached screenshot with faces and handles redacted' : 'Attached screenshot'}
-        className={cn('max-h-80 w-auto rounded-xl object-contain', shot.blurred && 'blur-md')}
-      />
-      <span
-        className={cn(
-          'absolute top-5 left-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm',
-          shot.blurred ? 'bg-foreground text-background' : 'bg-amber-100 text-amber-900',
-        )}
-      >
-        <EyeOff className="size-3.5" aria-hidden />
-        {shot.blurred ? 'Privacy Shield: faces & handles redacted' : 'Privacy Shield off'}
-      </span>
+      <img src={shot.url} alt="Attached screenshot" className="max-h-80 w-auto rounded-xl object-contain" />
     </div>
   )
 }

@@ -3,23 +3,17 @@
 import { useId } from 'react'
 import { ImageUp, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 
 interface ScreenshotUploadProps {
   file: { url: string; name: string } | null
   onFileChange: (file: { url: string; name: string } | null) => void
-  privacyShield: boolean
-  onPrivacyShieldChange: (on: boolean) => void
 }
 
 export function ScreenshotUpload({
   file,
   onFileChange,
-  privacyShield,
-  onPrivacyShieldChange,
 }: ScreenshotUploadProps) {
   const inputId = useId()
-  const shieldId = useId()
 
   function handleFiles(files: FileList | null) {
     const f = files?.[0]
@@ -35,14 +29,10 @@ export function ScreenshotUpload({
             {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
             <img
               src={file.url}
-              alt={`Preview of ${file.name}${privacyShield ? ' with privacy blur applied' : ''}`}
+              alt={`Preview of ${file.name}`}
               className="max-h-72 w-auto object-contain"
             />
-            {privacyShield && (
-              <span className="absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-violet-800 shadow-sm">
-                {'🎭 Faces & handles blurred'}
-              </span>
-            )}
+
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-sm">
             <span className="truncate text-muted-foreground">{file.name}</span>
@@ -77,17 +67,6 @@ export function ScreenshotUpload({
         </label>
       )}
 
-      <div className="flex items-center justify-between gap-4 rounded-2xl bg-secondary px-4 py-3">
-        <label htmlFor={shieldId} className="flex flex-col">
-          <span className="font-display text-base font-semibold text-secondary-foreground">
-            {'🎭 Privacy Shield: Auto-blur faces & handles'}
-          </span>
-          <span className="text-xs text-secondary-foreground/80">
-            {'Keeps names and faces hidden — even from us.'}
-          </span>
-        </label>
-        <Switch id={shieldId} checked={privacyShield} onCheckedChange={onPrivacyShieldChange} />
-      </div>
     </div>
   )
 }
